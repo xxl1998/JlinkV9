@@ -1,0 +1,42 @@
+这里提供两个方式：
+1-bootloader 可升级
+2-固件 不可升级（在V660C的环境下升级失败）
+
+这里我的jlink软件包是最新的V660C，所以推荐方法2，不会再让升级固件
+否则如果使用的DLL版本高于jlink固件版本，在使用jlink commander、keil等软件时，都会提示升级固件
+但是，用脚本提取的固件是不可升级的，点了升级会升级失败，每次都让升级很烦人。
+
+方法2的固件直接使用J-Flash、ST-link Utility等可以烧bin的软件烧进焊好的jlink板子上就行（需要另一个可用的下载器）
+（烧录方法可参考下面烧bootloader的步骤，文件改成固件的bin文件）
+
+方法1：
+（1）烧入bootloader：
+我使用J-Flash，打开软件，选择新建project，点击Start J-Flash，
+弹出窗口，选STM32F205RE，其他默认，点击OK。
+最上面File，open data file。选择bootloader.bin
+弹出窗口，点OK（就是STM32的Flash的起始地址，不需要改）
+使用探针或杜邦线+排针连接焊好的jlink板子上面MCU的SWD接口（我的板子是引出的2.54间距的bottom layer的4个点，用排针记得使劲，很大劲，
+否则接触不良连不上的，也可改板子或焊上排针，反正连上就行，我之前用排针压的太费劲，后来买了调试探针，2.54mm 4Pin的也就8块钱左右）
+确认SWD接口连好了，点击target connect
+连接成功，（报错请检查下载器和接线）
+点击target，production programming
+bootloader烧录很快，完成后弹窗说成功，拔下下载器，把烧好bootloader的jlink用USB连上电脑
+这时候看设备管理器，应该是有Jlink的
+打开旧版本Jlink commander，提示升级固件，确定升级（使用当前文件夹下旧版DLL，升级到旧版固件）
+然后依次输入如下命令
+Exec SetSN=29534567     ;添加SN 
+Exec AddFeature GDB      ;添加GDB 
+Exec AddFeature RDI      ;添加RDI 
+Exec AddFeature FlashBP  ;添加FlashBP  
+Exec AddFeature FlashDL  ;添加FlashDL 
+Exec AddFeature JFlash   ;添加JFlash 
+Exec AddFeature RDDI     ;添加RDDI
+执行成功会输出OK。七条命令七个OK
+然后打开V660C版本的Jlink commander，提示升级固件，确定升级，升级成功
+关闭再打开V660C版本的Jlink commander，不再提示升级固件，成功
+注意观察启动Jlink commander时的提示信息，有我们添加的SN和6个license，表示功能全部正常（我的截图里面有）
+再测试下虚拟串口，短接RXD和TDI（TDI就是虚拟串口的TXD），使用串口助手进行自发自收测试
+如果设备管理器没有虚拟串口，打开Jlink commander输入vcom enable进行开启
+全部完成，祝开发愉快！
+
+PS：使用bootloader后打开V660C版本的Jlink commander是可以升级固件，添加SN的，但是后面六条命令无法执行，不知道会不会影响使用，所以我使用了上面的方法。
